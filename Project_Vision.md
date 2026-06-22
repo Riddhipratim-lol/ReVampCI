@@ -1,0 +1,562 @@
+# Project_Vision
+
+# Autonomous Code Refactoring & CI/CD Guard Agent
+
+## Project Overview
+
+The Autonomous Code Refactoring & CI/CD Guard Agent is a multi-agent software engineering system that automatically analyzes a GitHub repository, identifies technical debt and maintainability issues, performs intelligent refactoring, validates all modifications through automated testing, and creates a Pull Request only when all quality gates are successfully passed.
+
+The system operates entirely inside GitHub Codespaces, allowing repository cloning, code modification, dependency installation, build execution, and test validation to occur in an isolated cloud environment.
+
+Unlike traditional linters that focus primarily on formatting and syntax issues, this system performs deep structural analysis, architecture review, maintainability assessment, and iterative code improvement. Every modification is validated through a continuous feedback loop that ensures functionality is preserved before any Pull Request is generated.
+
+---
+
+# Tech Stack
+
+### Core Framework
+
+- LangGraph
+- LangChain
+
+### Backend API
+
+- FastAPI
+- Pydantic
+
+### LLM Layer
+
+- Gemini-3.5-flash
+- Gemini-3.1-flash-lite
+
+### Repository Management
+
+- GitPython
+- GitHub REST API
+
+### Code Analysis
+
+- Tree-sitter
+- AST (Abstract Syntax Tree)
+
+### Execution Environment
+
+- GitHub Codespaces
+- Python Subprocess API
+
+### State Management & Persistence
+
+- LangGraph State
+- SQLite
+
+### Logging
+
+- Python Logging
+- Structured JSON Logs
+
+---
+
+# System State
+
+The LangGraph State serves as the shared memory layer between all agents.
+
+Every node reads information from the state, performs its task, and writes new information back into the state for downstream agents.
+
+```python
+{
+    "repo_url": "",
+    "repo_path": "",
+    "repository_structure": {},
+    "file_contents": {},
+    "dependency_graph": {},
+    "identified_issues": [],
+    "refactoring_tasks": [],
+    "modified_files": [],
+    "test_results": {},
+    "build_logs": "",
+    "error_logs": "",
+    "execution_history": [],
+    "pull_request_summary": ""
+}
+```
+
+---
+
+# End-to-End Workflow
+
+## Step 1: User Submits Repository
+
+The workflow begins when a repository URL is submitted to the FastAPI endpoint.
+
+### Input
+
+```json
+{
+    "repo_url": "https://github.com/user/repository"
+}
+```
+
+FastAPI validates the request and starts a new LangGraph execution.
+
+### Output
+
+```
+Validated Repository URL
+```
+
+---
+
+## Step 2: Repository Setup in GitHub Codespaces
+
+After receiving the repository URL, the system initializes a GitHub Codespace session.
+
+The repository is cloned and prepared for analysis.
+
+### Responsibilities
+
+- Clone repository
+- Checkout working branch
+- Install dependencies
+- Prepare execution environment
+- Store repository path in state
+
+### Output
+
+```
+Local Repository Path
+```
+
+Stored in:
+
+```python
+state["repo_path"]
+```
+
+---
+
+## Step 3: Parser Agent
+
+### Purpose
+
+The Parser Agent transforms the raw repository into a structured representation that can be understood by downstream agents.
+
+### Responsibilities
+
+- Traverse repository files
+- Read source code
+- Build AST representations
+- Create dependency graph
+- Detect project structure
+- Detect programming languages
+- Identify frameworks and libraries
+
+### Input
+
+```python
+{
+    "repo_path"
+}
+```
+
+### Processing
+
+Repository Files
+
+↓
+
+Source Code Extraction
+
+↓
+
+AST Generation
+
+↓
+
+Dependency Mapping
+
+↓
+
+Repository Structure Generation
+
+### Output
+
+```python
+{
+    "repository_structure": {},
+    "file_contents": {},
+    "dependency_graph": {}
+}
+```
+
+Stored in State:
+
+```python
+state["repository_structure"]
+state["file_contents"]
+state["dependency_graph"]
+```
+
+---
+
+## Step 4: Critic Agent
+
+### Purpose
+
+The Critic Agent acts as a senior software architect and code reviewer.
+
+It analyzes the parsed repository and generates a detailed improvement plan.
+
+### Responsibilities
+
+- Detect technical debt
+- Detect code smells
+- Find duplicate logic
+- Identify architecture issues
+- Detect maintainability problems
+- Detect excessive complexity
+- Identify optimization opportunities
+- Create refactoring tasks
+
+### Input
+
+```python
+{
+    "repository_structure",
+    "file_contents",
+    "dependency_graph"
+}
+```
+
+### Processing
+
+Repository Analysis
+
+↓
+
+Issue Detection
+
+↓
+
+Priority Ranking
+
+↓
+
+Refactoring Plan Generation
+
+### Output
+
+```python
+{
+    "identified_issues": [],
+    "refactoring_tasks": []
+}
+```
+
+Example:
+
+```
+1. Remove duplicated utility logic
+2. Reduce cyclomatic complexity
+3. Extract reusable components
+4. Remove dead code
+5. Fix dependency violations
+```
+
+Stored in State:
+
+```python
+state["identified_issues"]
+state["refactoring_tasks"]
+```
+
+---
+
+## Step 5: Coding Agent
+
+### Purpose
+
+The Coding Agent executes the refactoring plan generated by the Critic Agent.
+
+### Responsibilities
+
+- Read task list
+- Modify source files
+- Apply refactoring operations
+- Improve maintainability
+- Preserve existing functionality
+- Update execution history
+
+### Input
+
+```python
+{
+    "refactoring_tasks",
+    "file_contents"
+}
+```
+
+### Processing
+
+Task Selection
+
+↓
+
+Code Modification
+
+↓
+
+File Updates
+
+↓
+
+Change Summary Generation
+
+### Output
+
+```python
+{
+    "modified_files": [],
+    "updated_code": {}
+}
+```
+
+Stored in State:
+
+```python
+state["modified_files"]
+state["execution_history"]
+```
+
+---
+
+## Step 6: Tester Agent
+
+### Purpose
+
+The Tester Agent validates every modification made by the Coding Agent.
+
+This is the quality gate of the system.
+
+### Responsibilities
+
+- Install dependencies
+- Compile project
+- Run build commands
+- Execute test suite
+- Capture build failures
+- Capture runtime errors
+- Capture failed tests
+- Generate execution logs
+
+### Input
+
+```python
+{
+    "modified_files"
+}
+```
+
+### Processing
+
+Build Project
+
+↓
+
+Run Tests
+
+↓
+
+Capture Results
+
+↓
+
+Generate Logs
+
+### Output
+
+```python
+{
+    "tests_passed": true,
+    "build_logs": "",
+    "error_logs": ""
+}
+```
+
+Stored in State:
+
+```python
+state["test_results"]
+state["build_logs"]
+state["error_logs"]
+```
+
+---
+
+# Conditional Validation Loop
+
+At this stage, the workflow branches based on the Tester Agent's output.
+
+---
+
+## Scenario A: Tests Fail
+
+If the Tester Agent detects build failures, runtime errors, or failing test cases, the workflow does not proceed to Pull Request generation.
+
+Instead, the failure information is routed back to the Coding Agent.
+
+### Data Passed Back
+
+```python
+{
+    "error_logs",
+    "build_logs",
+    "test_results",
+    "previous_changes"
+}
+```
+
+### Loop Flow
+
+```
+Coding Agent
+      ↓
+Tester Agent
+      ↓
+Tests Fail
+      ↓
+Coding Agent
+      ↓
+Tester Agent
+```
+
+The Coding Agent uses the failure logs to generate corrective modifications.
+
+The cycle continues until:
+
+```
+All tests pass
+```
+
+or
+
+```
+Maximum iteration limit reached
+```
+
+---
+
+## Scenario B: Tests Pass
+
+When all tests pass successfully, the repository is considered stable and ready for integration.
+
+The workflow proceeds to the Pull Request Agent.
+
+---
+
+## Step 7: Pull Request Agent
+
+### Purpose
+
+The Pull Request Agent performs the final repository integration process.
+
+### Responsibilities
+
+- Create new Git branch
+- Commit all modifications
+- Generate PR summary
+- Generate changelog
+- Create Pull Request using GitHub API
+
+### Input
+
+```python
+{
+    "modified_files",
+    "execution_history",
+    "test_results"
+}
+```
+
+### Processing
+
+Create Branch
+
+↓
+
+Commit Changes
+
+↓
+
+Generate PR Description
+
+↓
+
+Create Pull Request
+
+### Output
+
+```python
+{
+    "branch_name": "",
+    "commit_hash": "",
+    "pull_request_url": ""
+}
+```
+
+Example PR Summary:
+
+```
+Refactored duplicated utility functions.
+Reduced complexity in authentication module.
+Removed dead code.
+Improved maintainability across 12 files.
+All tests passing.
+No build errors detected.
+```
+
+Stored in State:
+
+```python
+state["pull_request_summary"]
+```
+
+---
+
+## Flow of Execution
+
+```jsx
+[ FastAPI Request ]
+               │
+               ▼
+     +───────────────────+
+     │  setup_codespace  │  <-- Clones repo, sets environment
+     +───────────────────+
+               │
+               ▼
+     +───────────────────+
+     │   parser_agent    │  <-- Generates AST & Dependency Graph
+     +───────────────────+
+               │
+               ▼
+     +───────────────────+
+     │   critic_agent    │  <-- Identifies debt & creates refactoring tasks
+     +───────────────────+
+               │
+               ▼
+  ┌─>+───────────────────+
+  │  │   coding_agent    │  <-- Modifies source files / Applies fixes
+  │  +───────────────────+
+  │            │
+  │            ▼
+  │  +───────────────────+
+  │  │   tester_agent    │  <-- Compiles, builds, and runs test suite
+  │  +───────────────────+
+  │            │
+  │            ▼
+  │    [ Quality Gate? ] ───( Tests Pass )───> +──────────────+
+  │            │                               │   pr_agent   │
+  └─(Tests Fail)                               +──────────────+
+                                                       │
+                                                       ▼
+                                                    [ END ]
+```

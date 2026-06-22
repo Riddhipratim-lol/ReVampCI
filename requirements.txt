@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+langgraph
+langchain
+langchain-core
+langchain-google-genai
+google-genai
+GitPython
+tree-sitter
+python-dotenv
+httpx
