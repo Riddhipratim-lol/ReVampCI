@@ -114,7 +114,7 @@ state["repository_structure"]
 
 ---
 
-[ ] 3. Critic Node
+[x] 3. Critic Node
 
 #### Responsibilities
 
@@ -148,7 +148,7 @@ Example:
 
 ---
 
-[ ] 4. Refactoring Node
+[x] 4. Refactoring Node
 
 #### Responsibilities
 
