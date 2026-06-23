@@ -1,72 +1,389 @@
-# ReVampCI Project Implementation Details
+# IMPLEMENTATION PLAN
 
-This document outlines the generated folder structure and the purpose of each file and folder in the **Autonomous Code Refactoring & CI/CD Guard Agent** project.
+## Project Goal
 
----
+Build the project incrementally using a phase-based development strategy.
 
-## Directory Structure
+The first phase must produce a fully working end-to-end system that demonstrates the core value proposition of the project while remaining small enough to build and debug easily.
 
-```
-ReVampCI/
-├── .env                         # Current local environment configuration
-├── .env.template                # Template for environment variables (version-controlled)
-├── pyproject.toml               # Poetry/Project configuration
-├── requirements.txt             # Project Python dependencies
-├── Project_Vision.md            # Vision document defining system requirements
-├── implementation.md            # [This File] High-level architecture and file layout details
-├── src/                         # Core application package
-│   ├── __init__.py
-│   ├── config.py                # Configuration loader and environment schema
-│   ├── database.py              # SQLite storage/state persistence configuration
-│   ├── main.py                  # FastAPI service entry point
-│   ├── state.py                 # LangGraph state schema definition
-│   ├── graph.py                 # LangGraph workflow router and compiler
-│   ├── agents/                  # LangGraph node agent implementations
-│   │   ├── __init__.py
-│   │   ├── codespace.py         # Codespace setup node
-│   │   ├── parser.py            # AST parsing and structure mapping agent node
-│   │   ├── critic.py            # Code smell, duplicate analysis, and refactoring planner agent node
-│   │   ├── coding.py            # Refactoring execution agent node
-│   │   ├── tester.py            # Automated build/test running and verification agent node
-│   │   └── pr.py                # GitHub branch, commit, and Pull Request creation agent node
-│   └── utils/                   # Shared utility modules
-│       ├── __init__.py
-│       ├── git_helper.py        # Wrapper for repository clone/commit/branch actions (GitPython)
-│       ├── github_api.py        # Client for GitHub REST API interactions
-│       ├── ast_parser.py        # AST parsing and source code mapping (Tree-sitter/AST)
-│       └── logger.py            # Standard structured JSON logger configuration
-└── tests/                       # Project test suites
-    ├── __init__.py
-    ├── test_agents.py           # Unit tests for individual agent node states
-    └── test_api.py              # Integration tests for FastAPI endpoints
-```
+Every subsequent phase extends the previous phase without requiring major architectural rewrites.
 
 ---
 
-## File and Package Descriptions
+[ ] Phase 1 — Core Refactoring MVP
 
-### Core Package (`src/`)
-- **`config.py`**: Reads and validates environment variables defined in `.env` (such as `GEMINI_API_KEY`, `CUSTOM_GITHUB_TOKEN`, and `DATABASE_URL`).
-- **`database.py`**: Configures local persistence (SQLite) for storing execution history, issues log, and graph checkpoints.
-- **`main.py`**: Hosts the FastAPI server. It exposes endpoints to trigger the refactoring workflow for a repository URL and query execution status.
-- **`state.py`**: Defines the shared LangGraph State object that maps:
-  - Repository metadata (`repo_url`, `repo_path`).
-  - Extracted code structure (`repository_structure`, `file_contents`, `dependency_graph`).
-  - Audit/refactoring tasks (`identified_issues`, `refactoring_tasks`).
-  - Validation logs (`test_results`, `build_logs`, `error_logs`).
-  - Final integration details (`pull_request_summary`).
-- **`graph.py`**: Compiles nodes from `src/agents/` into a stateful LangGraph structure. Implements conditional loops to redirect execution back to the Coding Agent if the Tester Agent reports build or test failures.
+## Objective
 
-### Agent Nodes (`src/agents/`)
-- **`codespace.py`**: Handles repository preparation. Clones target codebases into workspace paths and installs their custom dependencies.
-- **`parser.py`**: Inspects files, builds AST representation using Tree-sitter or standard Python AST libraries, and builds a dependency map of functions/classes.
-- **`critic.py`**: Inspects files and AST details, calling LLMs to detect duplicate functions, over-complex files, and code smells, outputting structured list of tasks.
-- **`coding.py`**: Executes proposed refactoring tasks. Uses failure logs from `tester` to fix syntax errors or broken tests in a correction loop.
-- **`tester.py`**: Performs validation by running subprocess compiler/testing commands within the target repo environment.
-- **`pr.py`**: Creates a git branch with all modifications, commits changes with summaries, pushes, and creates a Pull Request via GitHub REST APIs.
+Create a working autonomous refactoring workflow that:
 
-### Utilities (`src/utils/`)
-- **`git_helper.py`**: Encapsulates common Git operations using `GitPython`.
-- **`github_api.py`**: Interface for the GitHub REST API to automate PR description postings.
-- **`ast_parser.py`**: Language-specific tree-sitter or core `ast` module wrappers.
-- **`logger.py`**: Unified logger for structured tracing across FastAPI endpoints and Graph node transitions.
+1. Accepts a GitHub repository URL
+2. Clones the repository
+3. Analyzes source files
+4. Identifies basic code quality issues
+5. Generates refactored code
+6. Runs tests
+7. Produces a refactoring report
+
+No Pull Requests.
+
+No GitHub API.
+
+No advanced architecture analysis.
+
+No dependency graph generation.
+
+No multi-iteration repair loops.
+
+The purpose is simply to prove:
+
+"Can the system safely analyze and improve a repository?"
+
+---
+
+## User Flow
+
+User submits repository URL
+
+↓
+
+Repository cloned
+
+↓
+
+Repository scanned
+
+↓
+
+Issues identified
+
+↓
+
+Code refactored
+
+↓
+
+Tests executed
+
+↓
+
+Refactoring report generated
+
+↓
+
+End
+
+---
+
+## LangGraph Nodes
+
+[x] 1. Repository Setup Node
+
+#### Responsibilities
+
+* Validate repository URL
+* Clone repository
+* Create working directory
+* Store repository path
+
+#### State Updates
+
+```python
+state["repo_url"]
+state["repo_path"]
+```
+
+---
+
+[x] 2. Repository Parser Node
+
+#### Responsibilities
+
+* Traverse repository
+* Read source files
+* Ignore binaries
+* Ignore node_modules
+* Ignore venv
+* Ignore build directories
+
+#### Output
+
+```python
+state["file_contents"]
+state["repository_structure"]
+```
+
+---
+
+[ ] 3. Critic Node
+
+#### Responsibilities
+
+Analyze code and identify:
+
+* Dead code
+* Duplicate logic
+* Long functions
+* Poor naming
+* Unused imports
+* Maintainability issues
+
+Generate structured improvement tasks.
+
+#### Output
+
+```python
+state["identified_issues"]
+state["refactoring_tasks"]
+```
+
+Example:
+
+```python
+[
+    "Remove unused imports",
+    "Simplify function calculate_total",
+    "Extract duplicate utility logic"
+]
+```
+
+---
+
+[ ] 4. Refactoring Node
+
+#### Responsibilities
+
+* Read refactoring tasks
+* Modify source code
+* Generate updated files
+* Save changes
+
+#### Output
+
+```python
+state["modified_files"]
+state["execution_history"]
+```
+
+---
+
+[ ] 5. Testing Node
+
+#### Responsibilities
+
+* Detect test framework
+* Run tests
+* Capture logs
+* Capture failures
+
+#### Output
+
+```python
+state["test_results"]
+state["build_logs"]
+```
+
+---
+
+[ ] 6. Report Node
+
+#### Responsibilities
+
+Generate:
+
+* Issues found
+* Files modified
+* Changes made
+* Test results
+* Summary
+
+#### Output
+
+```python
+state["final_report"]
+```
+
+---
+
+# Phase 1 State
+
+```python
+class GraphState(TypedDict):
+
+    repo_url: str
+    repo_path: str
+
+    repository_structure: dict
+    file_contents: dict
+
+    identified_issues: list
+    refactoring_tasks: list
+
+    modified_files: list
+
+    test_results: dict
+    build_logs: str
+
+    execution_history: list
+
+    final_report: str
+```
+
+---
+
+# Phase 1 Graph
+
+```text
+START
+  │
+  ▼
+repository_setup
+  │
+  ▼
+repository_parser
+  │
+  ▼
+critic_agent
+  │
+  ▼
+refactoring_agent
+  │
+  ▼
+testing_agent
+  │
+  ▼
+report_agent
+  │
+  ▼
+ END
+```
+
+---
+
+# Deliverables Before Moving To Phase 2
+
+The system must be capable of:
+
+✓ Cloning repositories
+
+✓ Reading project files
+
+✓ Identifying basic issues
+
+✓ Refactoring code
+
+✓ Running tests
+
+✓ Producing reports
+
+✓ Maintaining LangGraph state
+
+Only after these work reliably should additional capabilities be added.
+
+---
+
+[ ] Phase 2 — Intelligent Validation Loop
+
+## New Capability
+
+Introduce the quality gate.
+
+If tests fail:
+
+```text
+Refactor
+   ↓
+Test
+   ↓
+Fail
+   ↓
+Refactor Again
+```
+
+Add:
+
+* Error log analysis
+* Automatic repair attempts
+* Maximum retry count
+
+New Node:
+
+```text
+repair_agent
+```
+
+---
+
+[ ] Phase 3 — Structural Repository Understanding
+
+Add:
+
+* Tree-sitter parsing
+* AST generation
+* Dependency graph generation
+* Framework detection
+* Module relationship analysis
+
+This is where repository understanding becomes significantly deeper.
+
+---
+
+[ ] Phase 4 — Advanced Architectural Critic
+
+Upgrade the critic agent to identify:
+
+* Architectural violations
+* Layering issues
+* Dependency inversion problems
+* Circular dependencies
+* Large classes
+* High complexity modules
+
+Generate prioritized refactoring plans.
+
+---
+
+[ ] Phase 5 — Pull Request Automation
+
+Add:
+
+* Git branch creation
+* Commit generation
+* Changelog generation
+* GitHub API integration
+* Pull Request creation
+
+New Node:
+
+```text
+pr_agent
+```
+
+---
+
+[ ] Phase 6 — Full Autonomous Refactoring System
+
+Combine all previous phases into the final architecture.
+
+Workflow:
+
+```text
+Repository Setup
+        ↓
+Parser Agent
+        ↓
+Critic Agent
+        ↓
+Refactoring Agent
+        ↓
+Testing Agent
+        ↓
+Pass? ── No ──> Repair Agent
+  │                     │
+  └──────── Yes ◄───────┘
+        ↓
+PR Agent
+        ↓
+END
+```
+
+At this stage the system matches the complete project vision.
