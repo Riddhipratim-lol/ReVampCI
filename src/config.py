@@ -16,7 +16,7 @@ class Config:
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    CUSTOM_GITHUB_TOKEN: str = os.getenv("CUSTOM_GITHUB_TOKEN", "")
+    CUSTOM_GITHUB_TOKEN: str = os.getenv("CUSTOM_GITHUB_TOKEN", os.getenv("GITHUB_TOKEN", ""))
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///revampci.db")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     

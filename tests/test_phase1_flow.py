@@ -66,6 +66,8 @@ class TestPhase1Flow(unittest.TestCase):
         # Assertions
         self.assertIn("repo_path", final_state)
         self.assertTrue(os.path.exists(final_state["repo_path"]))
+        self.assertIn("workspace_path", final_state)
+        self.assertEqual(final_state["workspace_path"], settings.WORKSPACE_ROOT)
         
         self.assertIn("file_contents", final_state)
         self.assertIn("calculator.py", final_state["file_contents"])
@@ -105,6 +107,17 @@ class TestPhase1Flow(unittest.TestCase):
         print("\nExecution History:")
         for trace in final_state["execution_history"]:
             print(trace)
+            
+        # Verify new nodes' outputs
+        self.assertIn("test_results", final_state)
+        self.assertIn("success", final_state["test_results"])
+        self.assertIn("build_logs", final_state)
+        self.assertIsNotNone(final_state["build_logs"])
+        
+        self.assertIn("final_report", final_state)
+        self.assertTrue(final_state["final_report"].startswith("# ReVampCI Refactoring Report"))
+        print("\nFinal Report:")
+        print(final_state["final_report"])
 
 if __name__ == "__main__":
     unittest.main()

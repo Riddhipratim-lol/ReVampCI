@@ -7,6 +7,7 @@ class GraphState(TypedDict):
     # Repository details
     repo_url: str
     repo_path: str
+    workspace_path: str
     
     # Scanned repository files and structures
     repository_structure: Dict[str, Any]

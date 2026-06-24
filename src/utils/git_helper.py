@@ -44,10 +44,24 @@ def extract_repo_name(repo_url: str) -> str:
 def clone_repository(repo_url: str, dest_path: str) -> git.Repo:
     """
     Clones a git repository to the specified destination path.
+    Injects GitHub authentication tokens automatically when running inside Codespaces.
     Cleans up any existing directory if present to guarantee a fresh clone.
     """
     logger.info(f"Preparing to clone repository: {repo_url} into {dest_path}")
     
+    # Authenticate cloning inside GitHub Codespaces if a token is available
+    token = os.getenv("GITHUB_TOKEN") or os.getenv("CUSTOM_GITHUB_TOKEN")
+    authenticated_url = repo_url
+    if token and "github.com" in repo_url:
+        if repo_url.startswith("https://"):
+            authenticated_url = repo_url.replace("https://", f"https://x-access-token:{token}@")
+            logger.info("Injected authentication token into clone URL.")
+        elif repo_url.startswith("git@github.com:"):
+            # Convert SSH to authenticated HTTPS
+            repo_path_part = repo_url.split("git@github.com:")[-1]
+            authenticated_url = f"https://x-access-token:{token}@github.com/{repo_path_part}"
+            logger.info("Converted SSH URL to authenticated HTTPS clone URL.")
+            
     if os.path.exists(dest_path):
         logger.info(f"Target path {dest_path} already exists. Removing to perform a fresh clone.")
         try:
@@ -59,8 +73,8 @@ def clone_repository(repo_url: str, dest_path: str) -> git.Repo:
     os.makedirs(dest_path, exist_ok=True)
     
     try:
-        repo = git.Repo.clone_from(repo_url, dest_path)
-        logger.info(f"Successfully cloned repository: {repo_url}")
+        repo = git.Repo.clone_from(authenticated_url, dest_path)
+        logger.info("Successfully cloned repository.")
         return repo
     except Exception as e:
         logger.error(f"Failed to clone repository: {e}")
