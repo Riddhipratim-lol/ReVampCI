@@ -95,6 +95,9 @@ def report_node(state: GraphState) -> Dict[str, Any]:
     build_systems_str = ", ".join(project_metadata.get("build_systems", [])) if project_metadata.get("build_systems") else "None detected"
     entry_points_str = ", ".join(project_metadata.get("entry_points", [])) if project_metadata.get("entry_points") else "None detected"
     
+    priority_rankings = state.get("priority_rankings", [])
+    maintainability_score = state.get("maintainability_score")
+
     report_lines = [
         "# ReVampCI Refactoring Report",
         "",
@@ -110,9 +113,15 @@ def report_node(state: GraphState) -> Dict[str, Any]:
         f"- **Total Files**: {project_metadata.get('total_files', 0)} ({project_metadata.get('total_directories', 0)} directories)",
         f"- **Lines of Code (LOC)**: {project_metadata.get('total_loc', 0)}",
         f"- **Dependencies**: {len(dependencies)} packages detected",
+    ]
+    
+    if maintainability_score is not None:
+        report_lines.append(f"- **Architectural Maintainability Score**: `{maintainability_score}/100`")
+        
+    report_lines.extend([
         "",
         "## 1. Identified Issues",
-    ]
+    ])
     
     if identified_issues:
         for issue in identified_issues:
@@ -122,10 +131,23 @@ def report_node(state: GraphState) -> Dict[str, Any]:
         
     report_lines.extend([
         "",
-        "## 2. Refactoring Tasks",
+        "## 2. Priority Refactoring Plan",
     ])
     
-    if refactoring_tasks:
+    if priority_rankings:
+        for ranking in priority_rankings:
+            task = ranking.get("task", "")
+            priority = ranking.get("priority", "")
+            effort = ranking.get("effort", "")
+            impact = ranking.get("impact", "")
+            file = ranking.get("file", "")
+            report_lines.append(
+                f"- **Task**: {task}\n"
+                f"  - **Target File**: `{file}`\n"
+                f"  - **Priority**: `{priority}` | **Effort**: `{effort}`\n"
+                f"  - **Expected Architectural Impact**: {impact}"
+            )
+    elif refactoring_tasks:
         for task in refactoring_tasks:
             report_lines.append(f"- {task}")
     else:

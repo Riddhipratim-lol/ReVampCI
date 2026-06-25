@@ -41,3 +41,7 @@ class GraphState(TypedDict):
     dependency_graph: Dict[str, Any]
     symbol_table: Dict[str, Any]
 
+    # Critic priority rankings and architecture scores (Phase 4)
+    priority_rankings: List[Dict[str, Any]]
+    maintainability_score: int
+
