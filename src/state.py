@@ -45,3 +45,8 @@ class GraphState(TypedDict):
     priority_rankings: List[Dict[str, Any]]
     maintainability_score: int
 
+    # Intelligent validation loop fields (Phase 5)
+    error_logs: str
+    repair_attempts: int
+    repair_history: List[Dict[str, Any]]
+

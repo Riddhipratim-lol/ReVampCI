@@ -7,6 +7,7 @@ from src.agents.analysis import analysis_agent
 from src.agents.critic import critic_node
 from src.agents.coding import refactoring_node
 from src.agents.tester import tester_node
+from src.agents.repair import repair_node
 from src.agents.report import report_node
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     "critic_node",
     "refactoring_node",
     "tester_node",
+    "repair_node",
     "report_node",
 ]

@@ -23,6 +23,7 @@ def report_node(state: GraphState) -> Dict[str, Any]:
     modified_files = state.get("modified_files", [])
     test_results = state.get("test_results", {})
     execution_history = state.get("execution_history", [])
+    repair_history = state.get("repair_history", [])
     
     # Phase 2 intelligence state
     languages = state.get("languages", [])
@@ -160,9 +161,22 @@ def report_node(state: GraphState) -> Dict[str, Any]:
     
     if change_details:
         report_lines.extend(change_details)
-    else:
-        report_lines.append("No files were modified.")
-        
+    if repair_history:
+        report_lines.extend([
+            "",
+            "## 3.5 Autonomous Repair Attempts",
+        ])
+        for entry in repair_history:
+            attempt = entry.get("attempt", 0)
+            explanation = entry.get("explanation", "")
+            repaired_files = entry.get("repaired_files", [])
+            files_str = ", ".join([f"`{rf}`" for rf in repaired_files]) if repaired_files else "None"
+            report_lines.append(
+                f"- **Attempt {attempt}**:\n"
+                f"  - **Root Cause & Fix**: {explanation}\n"
+                f"  - **Files Modified**: {files_str}"
+            )
+
     report_lines.extend([
         "",
         "## 4. Verification Results",
