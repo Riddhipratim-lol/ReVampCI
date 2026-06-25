@@ -7,6 +7,7 @@ import os
 from typing import Dict, Any, List
 from src.state import GraphState
 from src.utils.logger import get_logger
+from src.utils.repository_intelligence import analyze_repository
 
 logger = get_logger(__name__)
 
@@ -90,7 +91,15 @@ def parse_repository(state: GraphState) -> Dict[str, Any]:
     }
     
     logger.info(f"Repository parsing complete. Scanned {len(structure_files)} files.")
+    
+    # Run repository intelligence analysis (Phase 2)
+    intelligence = analyze_repository(repo_path, file_contents, repository_structure)
+    
     return {
         "file_contents": file_contents,
-        "repository_structure": repository_structure
+        "repository_structure": repository_structure,
+        "languages": intelligence["languages"],
+        "frameworks": intelligence["frameworks"],
+        "dependencies": intelligence["dependencies"],
+        "project_metadata": intelligence["project_metadata"]
     }

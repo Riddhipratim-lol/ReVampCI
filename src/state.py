@@ -29,3 +29,10 @@ class GraphState(TypedDict):
     
     # Final generated report
     final_report: str
+
+    # Repository intelligence fields (Phase 2)
+    languages: List[str]
+    frameworks: List[str]
+    dependencies: List[str]
+    project_metadata: Dict[str, Any]
+

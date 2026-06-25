@@ -68,6 +68,7 @@ def refactoring_node(state: GraphState) -> Dict[str, Any]:
         formatted_files.append(f"--- File: {filepath} ---\n{content}\n")
     files_context = "\n".join(formatted_files)
     
+    # creates vertical markdown bullet points
     tasks_context = "\n".join([f"- {task}" for task in refactoring_tasks])
 
     system_prompt = (

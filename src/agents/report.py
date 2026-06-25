@@ -24,6 +24,12 @@ def report_node(state: GraphState) -> Dict[str, Any]:
     test_results = state.get("test_results", {})
     execution_history = state.get("execution_history", [])
     
+    # Phase 2 intelligence state
+    languages = state.get("languages", [])
+    frameworks = state.get("frameworks", [])
+    dependencies = state.get("dependencies", [])
+    project_metadata = state.get("project_metadata", {})
+    
     # 1. Ask LLM to generate a professional Executive Summary
     system_prompt = (
         "You are an expert software architect and technical writer.\n"
@@ -84,11 +90,26 @@ def report_node(state: GraphState) -> Dict[str, Any]:
         )
 
     # 2. Programmatically format the final report in Markdown
+    languages_str = ", ".join(languages) if languages else "None detected"
+    frameworks_str = ", ".join(frameworks) if frameworks else "None detected"
+    build_systems_str = ", ".join(project_metadata.get("build_systems", [])) if project_metadata.get("build_systems") else "None detected"
+    entry_points_str = ", ".join(project_metadata.get("entry_points", [])) if project_metadata.get("entry_points") else "None detected"
+    
     report_lines = [
         "# ReVampCI Refactoring Report",
         "",
         "## Executive Summary",
         exec_summary,
+        "",
+        "## Repository Profile",
+        f"- **Languages**: {languages_str}",
+        f"- **Primary Language**: `{project_metadata.get('primary_language', 'Unknown')}`",
+        f"- **Frameworks / Libraries**: {frameworks_str}",
+        f"- **Build Systems**: {build_systems_str}",
+        f"- **Entry Points**: {entry_points_str}",
+        f"- **Total Files**: {project_metadata.get('total_files', 0)} ({project_metadata.get('total_directories', 0)} directories)",
+        f"- **Lines of Code (LOC)**: {project_metadata.get('total_loc', 0)}",
+        f"- **Dependencies**: {len(dependencies)} packages detected",
         "",
         "## 1. Identified Issues",
     ]
