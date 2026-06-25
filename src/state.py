@@ -36,3 +36,8 @@ class GraphState(TypedDict):
     dependencies: List[str]
     project_metadata: Dict[str, Any]
 
+    # Deep code analysis fields (Phase 3)
+    ast_data: Dict[str, Any]
+    dependency_graph: Dict[str, Any]
+    symbol_table: Dict[str, Any]
+
